@@ -11,10 +11,10 @@ __all__ = [
 class IceKey(object):
 	# Modulo values for the S-boxes
 	__rMOD = [
-		[ 0x14D, 0x139, 0x1F9, 0x171 ],
-		[ 0x17B, 0x177, 0x13F, 0x187 ],
-		[ 0x169, 0x1BD, 0x1C9, 0x18D ],
-		[ 0x18D, 0x1A9, 0x18B, 0x1F9 ],
+		[ 333, 313, 505, 369 ],
+		[ 379, 375, 319, 391 ],
+		[ 361, 445, 451, 397 ],
+		[ 397, 425, 395, 505 ],
 	]
 	# XOR values for the S-boxes
 	__rXOR = [
