@@ -1,8 +1,8 @@
 
 __name__ = 'CryptICE'
 __author__ = '𝓡𝓮𝓷'
-__url__ = 'https://steamcommunity.com/id/SamXDR/'
-__version__ = '1.0.0'
+__url__ = 'https://steamcommunity.com/id/RenXR/'
+__version__ = '1.0.2'
 
 __all__ = [
 	'IceKey'
@@ -10,14 +10,14 @@ __all__ = [
 
 class IceKey(object):
 	# Modulo values for the S-boxes
-	__rMOD = [
+	__rSMOD = [
 		[ 333, 313, 505, 369 ],
 		[ 379, 375, 319, 391 ],
 		[ 361, 445, 451, 397 ],
 		[ 397, 425, 395, 505 ],
 	]
 	# XOR values for the S-boxes
-	__rXOR = [
+	__rSXOR = [
 		[ 0x83, 0x85, 0x9B, 0xCD ],
 		[ 0xCC, 0xA7, 0xAD, 0x41 ],
 		[ 0x4B, 0x2E, 0xD4, 0x33 ],
@@ -44,6 +44,13 @@ class IceKey(object):
 	__rSBOX_INITIALISED = False
 	__rSIZE = 0
 	__rROUNDS = 0
+	# Helpful functions
+	def __GenerateArray(self, size:int, value:int=0) -> list:
+		array = list()
+		for _ in range(size):
+			array.append(value)
+		return array
+	# Main functions
 	'''
 	Galois Field multiplication of a by b, modulo m.
 	Just like arithmetic multiplication, except that additions and subtractions are replaced by XOR.
@@ -94,10 +101,10 @@ class IceKey(object):
 			for i in range(0, 1024):
 				col = (i >> 1) & 0xFF
 				row = (i & 0x1) | ((i & 0x200) >> 8)
-				self.__rSBOX[0][i] = self.perm32(self.gf_exp7(col ^ self.__rXOR[0][row], self.__rMOD[0][row]) << 24)
-				self.__rSBOX[1][i] = self.perm32(self.gf_exp7(col ^ self.__rXOR[1][row], self.__rMOD[1][row]) << 16)
-				self.__rSBOX[2][i] = self.perm32(self.gf_exp7(col ^ self.__rXOR[2][row], self.__rMOD[2][row]) << 8)
-				self.__rSBOX[3][i] = self.perm32(self.gf_exp7(col ^ self.__rXOR[3][row], self.__rMOD[3][row]))
+				self.__rSBOX[0][i] = self.perm32(self.gf_exp7(col ^ self.__rSXOR[0][row], self.__rSMOD[0][row]) << 24)
+				self.__rSBOX[1][i] = self.perm32(self.gf_exp7(col ^ self.__rSXOR[1][row], self.__rSMOD[1][row]) << 16)
+				self.__rSBOX[2][i] = self.perm32(self.gf_exp7(col ^ self.__rSXOR[2][row], self.__rSMOD[2][row]) << 8)
+				self.__rSBOX[3][i] = self.perm32(self.gf_exp7(col ^ self.__rSXOR[3][row], self.__rSMOD[3][row]))
 			self.__rSBOX_INITIALISED = True
 		if n < 1:
 			self.__rSIZE = 1
@@ -110,7 +117,7 @@ class IceKey(object):
 			for j in range(0, 4):
 				self.__rKEY_SCHEDULE[i][j] = 0x00
 		if self.__rROUNDS == 8:
-			kb = [ 0x00 ] * 4
+			kb = self.__GenerateArray(4)
 			for i in range(0, 4):
 				kb[3 - i] = (key[i * 2] << 8) | key[i * 2 + 1]
 			for i in range(0, 8):
@@ -122,7 +129,7 @@ class IceKey(object):
 						isk[j % 3] = (isk[j % 3] << 1) | bit
 						kb[(kr + k) & 3] = (kb[(kr + k) & 3] >> 1) | ((bit ^ 1) << 15)
 		for i in range(0, self.__rSIZE):
-			kb = [ 0x00 ] * 4
+			kb = self.__GenerateArray(4)
 			for j in range(0, 4):
 				kb[3 - j] = (key[i * 8 + j * 2] << 8) | key[i * 8 + j * 2 + 1]
 			for l in range(0, 8):
@@ -167,7 +174,7 @@ class IceKey(object):
 	Encrypt a block of 8 bytes of data with the given ICE key.
 	'''
 	def EncryptBlock(self, data:list) -> list:
-		out = [ 0x00 ] * 8
+		out = self.__GenerateArray(8)
 		l = 0
 		r = 0
 		for i in range(0, 4):
@@ -186,7 +193,7 @@ class IceKey(object):
 	Decrypt a block of 8 bytes of data with the given ICE key.
 	'''
 	def DecryptBlock(self, data:list) -> list:
-		out = [ 0x00 ] * 8
+		out = self.__GenerateArray(8)
 		l = 0
 		r = 0
 		for i in range(0, 4):
@@ -204,8 +211,12 @@ class IceKey(object):
 	'''
 	Encrypt the data byte array with the given ICE key.
 	'''
-	def Encrypt(self, data:bytes) -> bytes:
-		out = []
+	def Encrypt(self, data:bytes, cmspadding:bool=False) -> bytes:
+		if cmspadding:
+			blocksize = self.BlockSize()
+			padding_length = blocksize - (len(data) % blocksize)
+			data += bytes(self.__GenerateArray(padding_length, padding_length))
+		out = bytearray()
 		blocksize = self.BlockSize()
 		bytesleft = len(data)
 		i = 0
@@ -219,8 +230,8 @@ class IceKey(object):
 	'''
 	Decrypt the data byte array with the given ICE key.
 	'''
-	def Decrypt(self, data:bytes) -> bytes:
-		out = []
+	def Decrypt(self, data:bytes, cmspadding:bool=False) -> bytes:
+		out = bytearray()
 		blocksize = self.BlockSize()
 		bytesleft = len(data)
 		i = 0
@@ -230,5 +241,8 @@ class IceKey(object):
 			i += blocksize
 		if bytesleft > 0:
 			out.extend(data[len(data)-bytesleft:len(data)])
+		if cmspadding:
+			out_length = len(out)
+			for i in range(1, out[-1] + 1):
+				del out[out_length - i]
 		return bytes(out)
-
