@@ -1,6 +1,11 @@
 # CryptICE
 ICE cipher for Python
 
+# Installation
+```bash
+python3 -m pip install --upgrade CryptICE
+```
+
 # Example
 ```python
 from CryptICE import IceKey
