@@ -10,13 +10,13 @@ __all__ = [
 class RLIST(list):
 	'''RestrictLIST'''
 	def __setattr__(self, name, value):
-		raise AttributeError(f'AttributeError: \'{type(self)}\' object has no attribute \'{name}\'')
+		raise AttributeError('AttributeError: \'{}\' object has no attribute \'{}\''.format(type(self), name))
 	def __setitem__(self, name, value):
-		raise TypeError(f'TypeError: \'{type(self)}\' object does not support item assignment')
+		raise TypeError('TypeError: \'{}\' object does not support item assignment'.format(type(self)))
 
 class RINT(int):
 	'''RestrictINT'''
-	_MAXVALUE:int = 2 ** 32
+	_MAXVALUE = 2 ** 32
 	def __new__(cls, value:int=0):
 		return int.__new__(cls, value % cls._MAXVALUE)
 	def __add__(self, *args, **kwargs):
