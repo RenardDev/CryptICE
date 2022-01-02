@@ -1,6 +1,3 @@
-# WARNING!
-The package is under development because it is vulnerable.
-
 # CryptICE
 ICE cipher for Python
 
