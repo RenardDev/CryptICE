@@ -11,13 +11,11 @@ python3 -m pip install --upgrade CryptICE
 from CryptICE import IceKey
 
 data = b'Hello, World!'
-key = bytearray([ 0x25, 0x6C, 0xC7, 0x0A, 0x00, 0x30, 0x00, 0x5C ])
 
-ice = IceKey(1, key)
+ice = IceKey(0, [ 0x45, 0x32, 0x4E, 0x63, 0x55, 0x6B, 0x47, 0x32 ]) # 64 bit key used
 
-encrypted_data = ice.Encrypt(data, True) # The last argument activates "CMS Padding" (Default is False)
-print(f'Encrypted = {encrypted_data}') # b'\x12*\xe2\x199\xe7,\x949?\x99\x0e\x96\x88\x84>'
-print(f'Decrypted = {ice.Decrypt(encrypted_data)}') # b'Hello, World!\x03\x03\x03'
-print(f'Decrypted = {ice.Decrypt(encrypted_data, True)}') # b'Hello, World!'
+encrypted_data = ice.Encrypt(data)
+print(f'Encrypted = {encrypted_data}') # b'@\xff\xf3TQ>X\x04orld!'
+print(f'Decrypted = {ice.Decrypt(encrypted_data)}') # b'Hello, World!'
 
 ```
